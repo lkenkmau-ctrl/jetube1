@@ -1,1 +1,73 @@
+консоль:
+App.jsx:705 Uncaught (in promise) NotSupportedError: The element has no supported sources.
+нетворк:
+Request URL:
 https://xdocmmzdewvmfqyqbqwc.supabase.co/storage/v1/object/public/videos/38dc5102-34f6-4d14-9020-797c998de6a8-1780502322566.mp4
+Request Method:
+GET
+Status Code:
+206 Partial Content (from disk cache)
+Remote Address:
+8.47.69.0:443
+Referrer Policy:
+strict-origin-when-cross-origin
+access-control-allow-origin:
+*
+age:
+0
+alt-svc:
+h3=":443"; ma=86400
+cache-control:
+public, max-age=3600
+cf-cache-status:
+HIT
+cf-ray:
+a060273c88f646ab-ARN
+content-length:
+24522
+content-range:
+bytes 491520-516041/516042
+content-type:
+video/mp4
+date:
+Wed, 03 Jun 2026 16:42:49 GMT
+etag:
+"67532ac9321a4f760d3ec57c4db6782e"
+last-modified:
+Wed, 03 Jun 2026 15:58:44 GMT
+priority:
+u=1,i
+sb-gateway-mode:
+direct
+sb-gateway-version:
+1
+sb-project-ref:
+xdocmmzdewvmfqyqbqwc
+sb-request-id:
+019e8e5d-c1d6-7185-a70a-80a4f87001d6
+server:
+cloudflare
+server-timing:
+cfExtPri
+x-robots-tag:
+none
+x-smart-cdn:
+true
+accept-encoding:
+identity;q=1, *;q=0
+range:
+bytes=491520-
+referer:
+https://jetube.onrender.com/
+sec-ch-ua:
+"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"
+sec-ch-ua-mobile:
+?0
+sec-ch-ua-platform:
+"Windows"
+user-agent:
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36
+﻿
+App.jsx:705 Uncaught (in promise) NotSupportedError: The element has no supported sources.
+﻿
+

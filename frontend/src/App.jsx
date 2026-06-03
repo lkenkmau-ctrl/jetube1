@@ -784,6 +784,7 @@ function CustomVideoPlayer({ videoId, videoUrl }) {
         className="video-element"
         src={videoUrl}
         onClick={togglePlay}
+        crossOrigin="anonymous"
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
