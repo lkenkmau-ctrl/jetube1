@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "ЖеТуб - клон YouTube",
   "scripts": {
-    "postinstall": "cd frontend && npm install",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "start": "cd backend && npm start",
     "backend": "cd backend && npm run dev",
