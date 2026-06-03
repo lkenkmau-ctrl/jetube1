@@ -56,6 +56,15 @@ CREATE TABLE IF NOT EXISTS comments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 6. Таблица истории просмотров
+CREATE TABLE IF NOT EXISTS watch_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  video_id UUID REFERENCES videos(id) ON DELETE CASCADE NOT NULL,
+  watched_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, video_id)
+);
+
 -- ==========================================
 -- RLS (Row Level Security) Policies
 -- ==========================================
@@ -131,6 +140,25 @@ CREATE POLICY "Users can delete own comments"
   ON comments FOR DELETE
   USING (auth.uid() = author_id);
 
+-- Watch history
+ALTER TABLE watch_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own watch history"
+  ON watch_history FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own watch history"
+  ON watch_history FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own watch history"
+  ON watch_history FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own watch history"
+  ON watch_history FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- ==========================================
 -- Functions & Triggers
 -- ==========================================
@@ -203,6 +231,14 @@ CREATE TRIGGER on_subscription_change
   AFTER INSERT OR DELETE ON subscriptions
   FOR EACH ROW EXECUTE FUNCTION public.update_subscriber_count();
 
+-- Функция для увеличения счетчика просмотров
+CREATE OR REPLACE FUNCTION public.increment_views(video_id UUID)
+RETURNS void AS $$
+BEGIN
+  UPDATE videos SET views = views + 1 WHERE id = video_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- ==========================================
 -- Supabase Storage Buckets
 -- ==========================================
@@ -261,3 +297,5 @@ CREATE INDEX IF NOT EXISTS idx_video_reactions_video ON video_reactions(video_id
 CREATE INDEX IF NOT EXISTS idx_video_reactions_user ON video_reactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_comments_video ON comments(video_id);
 CREATE INDEX IF NOT EXISTS idx_comments_author ON comments(author_id);
+CREATE INDEX IF NOT EXISTS idx_watch_history_user ON watch_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_watch_history_video ON watch_history(video_id);

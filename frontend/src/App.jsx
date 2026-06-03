@@ -161,6 +161,10 @@ function Sidebar() {
             <span className="sidebar-item-icon"><HistoryIcon /></span>
             <span className="sidebar-item-text">История</span>
           </Link>
+          <Link to="/liked" className="sidebar-item">
+            <span className="sidebar-item-icon"><LikeIcon /></span>
+            <span className="sidebar-item-text">Понравившиеся</span>
+          </Link>
           <Link to="/library" className="sidebar-item">
             <span className="sidebar-item-icon"><LibraryIcon /></span>
             <span className="sidebar-item-text">Моя библиотека</span>
@@ -906,6 +910,14 @@ function VideoPage() {
         
         // Increment view count
         await supabase.rpc('increment_views', { video_id: id })
+
+        // Save to watch history
+        if (user) {
+          await supabase.from('watch_history').upsert(
+            { user_id: user.id, video_id: id, watched_at: new Date().toISOString() },
+            { onConflict: 'user_id,video_id' }
+          )
+        }
         
         // Get user reaction
         if (user) {
@@ -1916,11 +1928,167 @@ function TrendingPage() {
 }
 
 function HistoryPage() {
-  return <div className="main-content"><h1>История</h1><p>В разработке...</p></div>
+  const { user } = useAuth()
+  const [videos, setVideos] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    fetchHistory()
+  }, [user])
+
+  const fetchHistory = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('watch_history')
+        .select('*, videos:video_id (*, profiles:profiles!videos_author_id_fkey (username, avatar))')
+        .eq('user_id', user.id)
+        .order('watched_at', { ascending: false })
+
+      if (data) {
+        setVideos(data.map(h => ({
+          ...h.videos,
+          author_name: h.videos?.profiles?.username,
+          author_avatar: h.videos?.profiles?.avatar,
+          watched_at: h.watched_at
+        })))
+      }
+    } catch (e) {
+      console.error('Error fetching history:', e)
+    }
+    setLoading(false)
+  }
+
+  const clearHistory = async () => {
+    if (!confirm('Очистить историю просмотров?')) return
+    await supabase.from('watch_history').delete().eq('user_id', user.id)
+    setVideos([])
+  }
+
+  if (loading) return <div className="main-content"><div className="loading"><div className="spinner"></div></div></div>
+
+  return (
+    <div className="main-content">
+      <div className="page-header">
+        <h1 className="page-title">История просмотров</h1>
+        {videos.length > 0 && (
+          <button className="btn btn-secondary" onClick={clearHistory} style={{ fontSize: '13px', padding: '6px 12px' }}>Очистить историю</button>
+        )}
+      </div>
+      {videos.length > 0 ? (
+        <div className="video-grid">{videos.map(video => <VideoCard key={`${video.id}-${video.watched_at}`} video={video} />)}</div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon"><HistoryIcon /></div>
+          <h2 className="empty-title">История пуста</h2>
+          <p className="empty-text">Начните смотреть видео — они появятся здесь</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function LibraryPage() {
-  return <div className="main-content"><h1>Библиотека</h1><p>В разработке...</p></div>
+  const { user } = useAuth()
+  const [videos, setVideos] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    fetchVideos()
+  }, [user])
+
+  const fetchVideos = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('videos')
+        .select('*, profiles:profiles!videos_author_id_fkey (username, avatar)')
+        .eq('author_id', user.id)
+        .order('upload_date', { ascending: false })
+
+      if (data) {
+        setVideos(data.map(v => ({ ...v, author_name: v.profiles?.username, author_avatar: v.profiles?.avatar })))
+      }
+    } catch (e) {
+      console.error('Error fetching library:', e)
+    }
+    setLoading(false)
+  }
+
+  if (loading) return <div className="main-content"><div className="loading"><div className="spinner"></div></div></div>
+
+  return (
+    <div className="main-content">
+      <div className="page-header">
+        <h1 className="page-title">Моя библиотека</h1>
+        <Link to="/upload" className="btn btn-primary" style={{ fontSize: '13px', padding: '6px 12px', textDecoration: 'none' }}>Загрузить видео</Link>
+      </div>
+      {videos.length > 0 ? (
+        <div className="video-grid">{videos.map(video => <VideoCard key={video.id} video={video} />)}</div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon"><LibraryIcon /></div>
+          <h2 className="empty-title">Библиотека пуста</h2>
+          <p className="empty-text">Загрузите своё первое видео</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function LikedVideosPage() {
+  const { user } = useAuth()
+  const [videos, setVideos] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    fetchLiked()
+  }, [user])
+
+  const fetchLiked = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('video_reactions')
+        .select('*, videos:video_id (*, profiles:profiles!videos_author_id_fkey (username, avatar))')
+        .eq('user_id', user.id)
+        .eq('reaction_type', 'like')
+        .order('created_at', { ascending: false })
+
+      if (data) {
+        setVideos(data.map(r => ({
+          ...r.videos,
+          author_name: r.videos?.profiles?.username,
+          author_avatar: r.videos?.profiles?.avatar
+        })))
+      }
+    } catch (e) {
+      console.error('Error fetching liked videos:', e)
+    }
+    setLoading(false)
+  }
+
+  if (loading) return <div className="main-content"><div className="loading"><div className="spinner"></div></div></div>
+
+  return (
+    <div className="main-content">
+      <div className="page-header">
+        <h1 className="page-title">Понравившиеся</h1>
+      </div>
+      {videos.length > 0 ? (
+        <div className="video-grid">{videos.map(video => <VideoCard key={video.id} video={video} />)}</div>
+      ) : (
+        <div className="empty-state">
+          <div className="empty-icon"><LikeIcon /></div>
+          <h2 className="empty-title">Нет понравившихся видео</h2>
+          <p className="empty-text">Ставьте лайки — они сохранятся здесь</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function SubscriptionsPage() {
@@ -1975,6 +2143,7 @@ function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/library" element={<LibraryPage />} />
           <Route path="/subscriptions" element={<SubscriptionsPage />} />
+          <Route path="/liked" element={<LikedVideosPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </div>
