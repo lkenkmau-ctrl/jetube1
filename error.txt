@@ -1,5 +1,5 @@
-Uncaught Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
-    at R0 (index.mjs:151:48)
-    at new O0 (index.mjs:199:19)
-    at A0 (index.mjs:392:9)
-    at supabase.js:7:25
+C:\Users\mamaN\python supermarket>git pull --rebase origin main
+error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+
+C:\Users\mamaN\python supermarket>
