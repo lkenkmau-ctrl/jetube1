@@ -2118,7 +2118,122 @@ function SubscriptionsPage() {
 }
 
 function SettingsPage() {
-  return <div className="main-content"><h1>Настройки</h1><p>В разработке...</p></div>
+  const { user } = useAuth()
+  const [username, setUsername] = useState('')
+  const [description, setDescription] = useState('')
+  const [avatar, setAvatar] = useState('')
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const avatarInputRef = useRef(null)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return }
+    fetchProfile()
+  }, [user])
+
+  const fetchProfile = async () => {
+    setLoading(true)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      if (data) {
+        setUsername(data.username || '')
+        setDescription(data.description || '')
+        setAvatar(data.avatar || '')
+      }
+    } catch (e) {
+      console.error('Error fetching profile:', e)
+    }
+    setLoading(false)
+  }
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setAvatarFile(file)
+    setAvatar(URL.createObjectURL(file))
+  }
+
+  const save = async () => {
+    if (!username.trim()) { setMessage('Имя не может быть пустым'); return }
+    setSaving(true)
+    setMessage('')
+    try {
+      let avatarUrl = avatar
+
+      if (avatarFile) {
+        const ext = avatarFile.name.split('.').pop()
+        const name = `${user.id}-avatar.${ext}`
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(name, avatarFile, { upsert: true })
+        if (uploadError) throw uploadError
+        avatarUrl = supabase.storage.from('avatars').getPublicUrl(name).data.publicUrl
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username: username.trim(), description: description.trim(), avatar: avatarUrl })
+        .eq('id', user.id)
+      if (error) throw error
+
+      setMessage('Настройки сохранены')
+    } catch (e) {
+      console.error('Error saving settings:', e)
+      setMessage('Ошибка: ' + e.message)
+    }
+    setSaving(false)
+  }
+
+  if (loading) return <div className="main-content"><div className="loading"><div className="spinner"></div></div></div>
+
+  if (!user) return <div className="main-content"><div className="empty-state"><p>Войдите в аккаунт</p></div></div>
+
+  return (
+    <div className="main-content">
+      <div className="settings-container">
+        <h1 className="page-title" style={{ marginBottom: '24px' }}>Настройки профиля</h1>
+
+        <div className="settings-avatar-section">
+          <div className="settings-avatar" onClick={() => avatarInputRef.current?.click()}>
+            {avatar ? <img src={avatar} alt="" /> : <div className="settings-avatar-placeholder">{username.charAt(0).toUpperCase()}</div>}
+            <div className="settings-avatar-overlay">Сменить</div>
+          </div>
+          <input type="file" ref={avatarInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleAvatarChange} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Имя канала</label>
+          <input className="form-input" value={username} onChange={e => setUsername(e.target.value)} placeholder="Ваше имя" />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Email</label>
+          <input className="form-input" value={user.email || ''} disabled style={{ opacity: 0.6 }} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Описание канала</label>
+          <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} placeholder="Расскажите о себе" />
+        </div>
+
+        {message && (
+          <div className="settings-message" style={{ color: message.includes('Ошибка') ? '#ef4444' : '#22c55e', marginBottom: '16px', fontSize: '14px' }}>
+            {message}
+          </div>
+        )}
+
+        <button className="upload-submit-btn" onClick={save} disabled={saving}>
+          {saving ? 'Сохранение...' : 'Сохранить'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // Main App
