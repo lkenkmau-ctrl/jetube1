@@ -1,0 +1,17 @@
+{
+  "name": "jetube",
+  "version": "1.0.0",
+  "description": "ЖеТуб - клон YouTube",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "start": "cd frontend && npm run build && cd ../backend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "tunnel": "cd backend && npm run tunnel",
+    "build": "cd frontend && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
