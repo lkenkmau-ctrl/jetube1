@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext, useRef } from 'react'
 import { Routes, Route, Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase, getCurrentUser, getToken } from './lib/supabase'
-import { HomeIcon, ShortsIcon, TrendingIcon, ChannelIcon, SubscriptionsIcon, HistoryIcon, LibraryIcon, UploadIcon, SearchIcon, SettingsIcon, LogoutIcon, ThumbUpIcon, ThumbDownIcon, DeleteIcon, VideoIcon, CameraIcon, UserIcon } from './lib/icons.jsx'
+import { HomeIcon, ShortsIcon, TrendingIcon, ChannelIcon, SubscriptionsIcon, HistoryIcon, LibraryIcon, UploadIcon, SearchIcon, SettingsIcon, LogoutIcon, ThumbUpIcon, ThumbDownIcon, DeleteIcon, VideoIcon, CameraIcon, UserIcon, LikeIcon } from './lib/icons.jsx'
 
 // Auth Context
 const AuthContext = createContext(null)

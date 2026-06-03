@@ -1,5 +1,4 @@
-C:\Users\mamaN\python supermarket>git pull --rebase origin main
-error: cannot pull with rebase: You have unstaged changes.
-error: Please commit or stash them.
-
-C:\Users\mamaN\python supermarket>
+react-dom.production.min.js:188 ReferenceError: LikeIcon is not defined
+    at B0 (App.jsx:165:50)
+react-dom.production.min.js:282 Uncaught ReferenceError: LikeIcon is not defined
+    at B0 (App.jsx:165:50)
