@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, useRef } from 'react'
-import { Routes, Route, Link, useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom'
-import { supabase, getCurrentUser, getToken } from './lib/supabase'
+import { Routes, Route, Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { supabase, getCurrentUser } from './lib/supabase'
 import { HomeIcon, ShortsIcon, TrendingIcon, ChannelIcon, SubscriptionsIcon, HistoryIcon, LibraryIcon, UploadIcon, SearchIcon, SettingsIcon, LogoutIcon, ThumbUpIcon, ThumbDownIcon, DeleteIcon, VideoIcon, CameraIcon, UserIcon, LikeIcon } from './lib/icons.jsx'
 
 // Auth Context
@@ -377,7 +377,7 @@ function VideoCard({ video }) {
         <h3 className="video-title">{video.title}</h3>
         <div className="video-meta">
           <Link to={`/channel/${video.author_id}`} className="video-author-link" onClick={e => e.stopPropagation()}>
-            {video.author_name || video.authorId}
+            {video.author_name || video.author_id}
           </Link>
           <span className="video-dot">•</span>
           <span>{formatViews(video.views)} {viewsWord(video.views)}</span>
@@ -838,7 +838,7 @@ function CustomVideoPlayer({ videoId, videoUrl }) {
           </div>
 
           <div className="player-right-controls">
-            <div className="settings-container">
+            <div className="player-settings-wrap">
               <button className="player-btn" onClick={() => setShowSettings(!showSettings)}>
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
               </button>
@@ -1110,16 +1110,16 @@ function UploadPage() {
     e.preventDefault()
     if (!videoFile || !user) return
 
-    if (videoType === 'shorts') {
-      const duration = await getVideoDuration(videoFile)
-      if (duration > 120) {
-        setUploading(false)
-        return alert('Длительность Shorts не должна превышать 2 минуты')
-      }
-    }
-
     setUploading(true)
     try {
+      if (videoType === 'shorts') {
+        const duration = await getVideoDuration(videoFile)
+        if (duration > 120) {
+          setUploading(false)
+          return alert('Длительность Shorts не должна превышать 2 минуты')
+        }
+      }
+
       const MAX_SIZE = videoType === 'shorts' ? 100 * 1024 * 1024 : 50 * 1024 * 1024
       if (videoFile.size > MAX_SIZE) {
         throw new Error(videoType === 'shorts' ? 'Размер shorts не должен превышать 100MB' : 'Размер видео не должен превышать 50MB')
@@ -2164,7 +2164,7 @@ function SettingsPage() {
     setSaving(true)
     setMessage('')
     try {
-      let avatarUrl = avatar
+      let avatarUrl = avatar || null
 
       if (avatarFile) {
         const ext = avatarFile.name.split('.').pop()
